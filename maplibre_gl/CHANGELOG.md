@@ -1,3 +1,9 @@
+## Unreleased
+
+### Added
+
+* Added `annotationBelowLayerIds` option to control the insertion point of annotation layers relative to existing style layers.
+
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
 ### Breaking changes
