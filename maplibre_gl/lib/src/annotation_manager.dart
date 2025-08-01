@@ -24,19 +24,28 @@ abstract class AnnotationManager<T extends Annotation> {
   /// This can be replaced by layer filters a soon as they are implemented
   final int Function(T)? selectLayer;
 
+  /// Id of the style layer below which the annotation layers should be added
+  /// when this manager is initialized. If null, layers are added on top of the
+  /// style.
+  final String? belowLayerId;
+
   /// get the an annotation by its id
   T? byId(String id) => _idToAnnotation[id];
 
   Set<T> get annotations => _idToAnnotation.values.toSet();
 
   AnnotationManager(this.controller,
-      {this.onTap, this.selectLayer, required this.enableInteraction})
+      {this.onTap,
+      this.selectLayer,
+      required this.enableInteraction,
+      this.belowLayerId})
       : id = getRandomString() {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
           promoteId: "id");
-      controller.addLayer(layerId, layerId, allLayerProperties[i]);
+      controller.addLayer(layerId, layerId, allLayerProperties[i],
+          belowLayerId: i == 0 ? belowLayerId : _makeLayerId(i - 1));
     }
 
     if (onTap != null) {
@@ -51,7 +60,8 @@ abstract class AnnotationManager<T extends Annotation> {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       await controller.removeLayer(layerId);
-      await controller.addLayer(layerId, layerId, allLayerProperties[i]);
+      await controller.addLayer(layerId, layerId, allLayerProperties[i],
+          belowLayerId: i == 0 ? belowLayerId : _makeLayerId(i - 1));
     }
   }
 
@@ -169,7 +179,8 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(super.controller, {super.onTap, super.enableInteraction = true})
+  LineManager(super.controller,
+      {super.onTap, super.enableInteraction = true, super.belowLayerId})
       : super(
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );
@@ -197,6 +208,7 @@ class FillManager extends AnnotationManager<Fill> {
     super.controller, {
     super.onTap,
     super.enableInteraction = true,
+    super.belowLayerId,
   }) : super(
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
         );
@@ -222,6 +234,7 @@ class CircleManager extends AnnotationManager<Circle> {
     super.controller, {
     super.onTap,
     super.enableInteraction = true,
+    super.belowLayerId,
   });
 
   @override
@@ -247,6 +260,7 @@ class SymbolManager extends AnnotationManager<Symbol> {
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
     super.enableInteraction = true,
+    super.belowLayerId,
   })  : _iconAllowOverlap = iconAllowOverlap,
         _textAllowOverlap = textAllowOverlap,
         _iconIgnorePlacement = iconIgnorePlacement,

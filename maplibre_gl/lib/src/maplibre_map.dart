@@ -61,6 +61,7 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.line,
       AnnotationType.circle,
     ],
+    this.annotationBelowLayerIds = const {},
   })  : assert(
           myLocationRenderMode == MyLocationRenderMode.normal ||
               myLocationEnabled,
@@ -85,6 +86,13 @@ class MapLibreMap extends StatefulWidget {
   ///
   /// (must contain at least 1 annotation type, 4 items max)
   final List<AnnotationType> annotationConsumeTapEvents;
+
+  /// Determines below which existing style layer the annotation layers should
+  /// be inserted when they are created. The key is the annotation type and the
+  /// value is the layer id in the style that the annotation layers will be
+  /// placed below. If no entry is provided for an annotation type, the layers
+  /// are added on top of the style by default.
+  final Map<AnnotationType, String> annotationBelowLayerIds;
 
   /// Please note: you should only add annotations (e.g. symbols or circles) after `onStyleLoadedCallback` has been called.
   final MapCreatedCallback? onMapCreated;
@@ -339,6 +347,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       onMapIdle: widget.onMapIdle,
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
+      annotationBelowLayerIds: widget.annotationBelowLayerIds,
     );
     await _maplibrePlatform.initPlatform(id);
     _controller.complete(controller);

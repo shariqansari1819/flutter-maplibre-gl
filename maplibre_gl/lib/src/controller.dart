@@ -78,6 +78,7 @@ class MapLibreMapController extends ChangeNotifier {
     required CameraPosition initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
     required Iterable<AnnotationType> annotationConsumeTapEvents,
+    Map<AnnotationType, String> annotationBelowLayerIds = const {},
     this.onStyleLoadedCallback,
     this.onMapClick,
     this.onMapLongClick,
@@ -87,7 +88,8 @@ class MapLibreMapController extends ChangeNotifier {
     this.onMapIdle,
     this.onUserLocationUpdated,
     this.onCameraIdle,
-  }) : _maplibrePlatform = maplibrePlatform {
+  })  : _maplibrePlatform = maplibrePlatform,
+        annotationBelowLayerIds = Map.of(annotationBelowLayerIds) {
     _cameraPosition = initialCameraPosition;
 
     _maplibrePlatform.onFeatureTappedPlatform.add((payload) {
@@ -137,18 +139,24 @@ class MapLibreMapController extends ChangeNotifier {
         switch (type) {
           case AnnotationType.fill:
             fillManager = FillManager(this,
-                onTap: onFillTapped.call, enableInteraction: enableInteraction);
+                onTap: onFillTapped.call,
+                enableInteraction: enableInteraction,
+                belowLayerId: annotationBelowLayerIds[type]);
           case AnnotationType.line:
             lineManager = LineManager(this,
-                onTap: onLineTapped.call, enableInteraction: enableInteraction);
+                onTap: onLineTapped.call,
+                enableInteraction: enableInteraction,
+                belowLayerId: annotationBelowLayerIds[type]);
           case AnnotationType.circle:
             circleManager = CircleManager(this,
                 onTap: onCircleTapped.call,
-                enableInteraction: enableInteraction);
+                enableInteraction: enableInteraction,
+                belowLayerId: annotationBelowLayerIds[type]);
           case AnnotationType.symbol:
             symbolManager = SymbolManager(this,
                 onTap: onSymbolTapped.call,
-                enableInteraction: enableInteraction);
+                enableInteraction: enableInteraction,
+                belowLayerId: annotationBelowLayerIds[type]);
         }
       }
       onStyleLoadedCallback?.call();
@@ -195,6 +203,11 @@ class MapLibreMapController extends ChangeNotifier {
   final OnCameraIdleCallback? onCameraIdle;
 
   final OnMapIdleCallback? onMapIdle;
+
+  /// Map controlling at which style layer each annotation type will be inserted
+  /// when the managers are created. If an annotation type is not present in the
+  /// map, its layers will be added on top of the style.
+  final Map<AnnotationType, String> annotationBelowLayerIds;
 
   /// Callbacks to receive tap events for symbols placed on this map.
   final ArgumentCallbacks<Symbol> onSymbolTapped = ArgumentCallbacks<Symbol>();
